@@ -3,11 +3,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from '../users/user.entity';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
+    private jwtService: JwtService,
   ) {}
 
   async register(username: string, password: string, profile?: string) {
@@ -17,14 +19,16 @@ export class AuthService {
     if (existingUser)
       throw new BadRequestException('یوزرنیم قبلاً گرفته شده است.');
 
-    const hashedPassword = await bcrypt.hash(password, 10); // هش کردن پسورد
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = this.userRepository.create({
       username,
       password: hashedPassword,
       profile,
     });
-    return await this.userRepository.save(user);
+    await this.userRepository.save(user);
+
+    return { message: 'ثبت‌نام موفقیت‌آمیز' };
   }
 
   async login(username: string, password: string) {
@@ -36,6 +40,9 @@ export class AuthService {
     if (!isPasswordValid)
       throw new BadRequestException('نام کاربری یا رمز عبور اشتباه است.');
 
-    return { message: 'ورود موفقیت‌آمیز', user };
+    const payload = { username: user.username, sub: user.id };
+    const token = this.jwtService.sign(payload);
+
+    return { access_token: token };
   }
 }

@@ -5,9 +5,9 @@ import { UsersController } from './users.controller';
 import { User } from './user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])], // ثبت مدل User
+  imports: [TypeOrmModule.forFeature([User])], // اینجا UserEntity رو ایمپورت کن
   controllers: [UsersController],
   providers: [UsersService],
-  exports: [UsersService], // برای استفاده در auth module
+  exports: [UsersService, TypeOrmModule], // باید اکسپورت بشه تا در AuthModule استفاده بشه
 })
 export class UsersModule {}
